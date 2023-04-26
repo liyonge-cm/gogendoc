@@ -18,17 +18,12 @@ import (
 
 )
 
-type Common struct {
-	UserID   int    `json:"-" v:"required" comment:"渠道用户ID"`
-	UserName string `json:"UserName" v:"required" comment:"渠道用户名称"`
-}
 type ChannelUser struct {
 	UserID   int    `json:"UserID" v:"required" comment:"渠道用户ID"`
 	UserName string `json:"UserName" v:"required" comment:"渠道用户名称"`
 	Channel  string `json:"Channel" v:"required" comment:"渠道"`
 }
 type CreateUserInfo struct {
-	Common
 	UserAge     int         `json:"UserAge" v:"required" comment:"用户年龄"`
 	UserName    string      `json:"UserName" v:"required" comment:"用户名称"`
 	Type        string      `json:"Type" v:"required" comment:"用户类型"`
