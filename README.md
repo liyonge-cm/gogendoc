@@ -37,27 +37,11 @@ type CreateUserInfoResponse struct {
 	Data    interface{} `json:"Data"`
 }
 
-func TestGenDoc(t *testing.T) {
-	// 实例化文档
-	doc := gogendoc.NewDocument(&gogendoc.Document{
-		Title:   "用户接口文档",
-		Author:  gogendoc.Author,
-		BaseUrl: "http://xxx",
-	})
-	doc.AddItem("创建用户信息", "CreateUserInfo", gogendoc.POST, &CreateUserInfo{}, &CreateUserInfoResponse{Data: &CreateUserInfo{}})
-	doc.GenerateFields()
-	list := doc.GetList()
-	b, err := json.Marshal(list)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println(string(b))
-}
 
-func TestGenMarkDown(t *testing.T) {
+func main {
 	// 实例化文档
 	doc := gogendoc.NewDocument(&gogendoc.Document{
-		Title:       "用户接口文档1111",
+		Title:       "接口文档",
 		Version:     "1.0.0",
 		Author:      gogendoc.Author,
 		BaseUrl:     "http://xxx",
@@ -75,10 +59,15 @@ func TestGenMarkDown(t *testing.T) {
 	// 添加接口
 	doc.AddItem("创建用户信息", "/createUserInfo", gogendoc.POST, &CreateUserInfo{}, &CreateUserInfoResponse{Data: &CreateUserInfo{}})
 
+	// 添加分组的接口
+	group := doc.NewGroup("用户信息")
+	// 添加组成员
+	group.AddGroupItem("创建用户信息", "/createUserInfo", gogendoc.POST, &CreateUserInfo{}, &CreateUserInfoResponse{Data: &CreateUserInfo{}})
+
 	// 生成字段
 	doc.GenerateFields()
 	// 实例化文档生成器
-	md := markdown.New(doc)
+	md := New(doc)
 	// 生成文档
 	md.Generate("./docs")
 }

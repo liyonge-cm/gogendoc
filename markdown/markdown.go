@@ -43,15 +43,26 @@ func (m *Markdown) Generate(file string) {
 		panic(err)
 	}
 
-	list := m.doc.GetList()
-	for i, item := range list {
+	m.generateList(file, m.doc.GetList())
 
-		pageFile := path.Join(file, string(item.Url)+".md")
+	group := m.doc.GetGroup()
+	for _, g := range group {
+		groupFile := path.Join(file, g.Name)
+		err = createDir(groupFile)
+		if err != nil {
+			panic(err)
+		}
+		m.generateList(groupFile, g.List)
+	}
+}
+
+func (m *Markdown) generateList(baseFile string, list []gogendoc.DocItem) {
+	for i, item := range list {
+		pageFile := path.Join(baseFile, string(item.Url)+".md")
 		if m.doc.FileNameKey == "title" {
-			pageFile = path.Join(file, item.Title+".md")
+			pageFile = path.Join(baseFile, item.Title+".md")
 		}
 		page := m.RenderPage(i, item)
-
 		_ = os.Remove(pageFile)
 		err := createFile(pageFile, []byte(page))
 		if err != nil {
@@ -154,7 +165,7 @@ func (m *Markdown) RenderReqParam(v gogendoc.Field) string {
 			Fields: v.List,
 		}
 		m.subReqList = append(m.subReqList, subTable)
-		v.Description = fmt.Sprintf("%s [点我](#%d.%s)", v.Description, m.id, v.Name)
+		v.Description = fmt.Sprintf("%s [go](#%d.%s)", v.Description, m.id, v.Name)
 	}
 	ts = strings.Replace(ts, "{description}", v.Description, 1)
 	return ts
@@ -186,7 +197,7 @@ func (m *Markdown) RenderRespParam(v gogendoc.Field) string {
 			Fields: v.List,
 		}
 		m.subRespList = append(m.subRespList, subTable)
-		v.Description = fmt.Sprintf("%s [点我](#%d.%s)", v.Description, m.id, v.Name)
+		v.Description = fmt.Sprintf("%s [go](#%d.%s)", v.Description, m.id, v.Name)
 	}
 	ts = strings.Replace(ts, "{description}", v.Description, 1)
 	return ts

@@ -22,12 +22,18 @@ const (
 	Author string = "Yonge"
 )
 
+type DocGroup struct {
+	Name string
+	List []DocItem
+}
+
 type Document struct {
-	Title          string    `json:"title"`   // 文档标题
-	Version        string    `json:"version"` // 版本号
-	BaseUrl        string    `json:"baseUrl"` // BaseUrl
-	Author         string    `json:"author"`  // 作者
-	List           []DocItem `json:"list"`    // 文档列表
+	Title          string               `json:"title"`   // 文档标题
+	Version        string               `json:"version"` // 版本号
+	BaseUrl        string               `json:"baseUrl"` // BaseUrl
+	Author         string               `json:"author"`  // 作者
+	Group          map[string]*DocGroup `json:"group"`   // 分组
+	List           []DocItem            `json:"list"`    // 文档列表
 	getName        func(field reflect.StructField) string
 	getRequired    func(field reflect.StructField) bool
 	getDescription func(field reflect.StructField) string
@@ -59,7 +65,7 @@ func NewDocument(doc *Document) *Document {
 	doc.getName = getName
 	doc.getRequired = getRequired
 	doc.getDescription = getDescription
-
+	doc.Group = make(map[string]*DocGroup)
 	return doc
 }
 
@@ -88,6 +94,31 @@ func (d *Document) AddItem(title string, url UrlType, method MethodType, req, re
 	}
 }
 
+func (d *Document) NewGroup(name string) *DocGroup {
+	d.Group[name] = &DocGroup{
+		Name: name,
+		List: []DocItem{},
+	}
+	return d.Group[name]
+}
+func (g *DocGroup) AddGroupItem(title string, url UrlType, method MethodType, req, resp interface{}) {
+	v := DocItem{
+		Title:     title,
+		Url:       url,
+		Method:    method,
+		ReqParam:  req,
+		RespParam: resp,
+	}
+
+	if len(g.List) == 0 {
+		g.List = make([]DocItem, 0)
+		g.List = append(g.List, v)
+	} else {
+		g.List = append(g.List, v)
+	}
+	//d.Group[g.name] = g
+}
+
 // 生成接口列表
 func (d *Document) GenerateFields() {
 	if len(d.List) > 0 {
@@ -97,11 +128,23 @@ func (d *Document) GenerateFields() {
 			d.List[i] = docItem
 		}
 	}
+	if len(d.Group) > 0 {
+		for _, g := range d.Group {
+			for i, docItem := range g.List {
+				docItem.ReqFields = d.createFields(docItem.ReqParam)
+				docItem.RespFields = d.createFields(docItem.RespParam)
+				g.List[i] = docItem
+			}
+		}
+	}
 }
 
 // 获取接口列表
 func (d *Document) GetList() []DocItem {
 	return d.List
+}
+func (d *Document) GetGroup() map[string]*DocGroup {
+	return d.Group
 }
 
 func (d *Document) GetFieldName(getNameFunc func(field reflect.StructField) string) {

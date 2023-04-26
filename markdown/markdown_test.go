@@ -9,8 +9,8 @@ import (
 )
 
 type Common struct {
-	UserID   int    `json:"-" v:"required" comment:"渠道用户ID"`
-	UserName string `json:"UserName" v:"required" comment:"渠道用户名称"`
+	Time   int64  `json:"-"`
+	Source string `json:"Source" v:"required" comment:"来源"`
 }
 type ChannelUser struct {
 	UserID   int    `json:"UserID" v:"required" comment:"渠道用户ID"`
@@ -48,11 +48,34 @@ func TestGenDoc(t *testing.T) {
 	}
 	fmt.Println(string(b))
 }
+func TestGenDocGroup(t *testing.T) {
+	// 实例化文档
+	doc := gogendoc.NewDocument(&gogendoc.Document{
+		Title:   "用户接口文档",
+		Author:  gogendoc.Author,
+		BaseUrl: "http://xxx",
+	})
+	// 添加分组的接口
+	group := doc.NewGroup("用户信息")
+	// 添加组成员
+	group.AddGroupItem("创建用户信息", "/createUserInfo", gogendoc.POST, &CreateUserInfo{}, &CreateUserInfoResponse{Data: &CreateUserInfo{}})
+	doc.GenerateFields()
+	gm := doc.GetGroup()
+
+	for _, g := range gm {
+		b, err := json.Marshal(g.List)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Println(string(b))
+	}
+
+}
 
 func TestGenMarkDown(t *testing.T) {
 	// 实例化文档
 	doc := gogendoc.NewDocument(&gogendoc.Document{
-		Title:       "用户接口文档1111",
+		Title:       "接口文档",
 		Version:     "1.0.0",
 		Author:      gogendoc.Author,
 		BaseUrl:     "http://xxx",
@@ -70,10 +93,16 @@ func TestGenMarkDown(t *testing.T) {
 	// 添加接口
 	doc.AddItem("创建用户信息", "/createUserInfo", gogendoc.POST, &CreateUserInfo{}, &CreateUserInfoResponse{Data: &CreateUserInfo{}})
 
+	// 添加分组的接口
+	group := doc.NewGroup("用户信息")
+	// 添加组成员
+	group.AddGroupItem("创建用户信息", "/createUserInfo", gogendoc.POST, &CreateUserInfo{}, &CreateUserInfoResponse{Data: &CreateUserInfo{}})
+
 	// 生成字段
 	doc.GenerateFields()
 	// 实例化文档生成器
 	md := New(doc)
 	// 生成文档
 	md.Generate("./docs")
+
 }
